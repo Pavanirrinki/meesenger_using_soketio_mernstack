@@ -1,7 +1,8 @@
 const express = require("express");
 const middleware = require("../Middleware/middleware.js")
 const messagemodel = require("../Models/MessagesModel.js")
-const Conversation = require("../Models/AllMessagesmodel.js")
+const Conversation = require("../Models/AllMessagesmodel.js");
+
 const router = express();
 
 
@@ -11,7 +12,10 @@ router.get("/allmessages/:id/:creator",async(req,res)=>{
         let conversation = await Conversation.findOne({
             participants: { $all: [req.params.creator, req.params.id] },
         }).populate("messages");
+       
+      
 if(conversation){
+   
     return res.status(200).json({conversation})
 }else{
     return res.status(200).json([])
@@ -23,10 +27,13 @@ if(conversation){
 })
 
 router.get("/allmessagesofuser/:id",async(req,res)=>{
+    
+
     try{
         let conversation = await Conversation.find({
             participants: { $in: [req.params.id] },
         }).populate("messages").populate("participants");
+       
 if(conversation){
     return res.status(200).json({conversation})
 }else{

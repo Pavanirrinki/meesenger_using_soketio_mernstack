@@ -2,7 +2,6 @@
  
     background-color: #fff;
     border-radius: 10px;
-   
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -12,9 +11,10 @@
 .message-list {
     list-style-type: none;
     padding: 0;
-    margin: 0;
+    margin-top: 100px;
     flex: 1;
     overflow-y: auto;
+
 }
 
 .message {
@@ -38,9 +38,16 @@
 }
 
 .input-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 65vw;
     display: flex;
-    margin-top: 20px;
+   justify-content: flex-end; 
+   margin-left: 30vw;
+   margin-bottom: 5px;
 }
+
 
 .input-field {
     flex: 1;
@@ -62,4 +69,10 @@
 
 .send-button:hover {
     background-color: #45a049;
+}
+.profile_container{
+    height: 100px;
+    width:100%;
+    background-color: gray;
+    position: fixed;
 }

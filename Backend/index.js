@@ -35,18 +35,28 @@ const io = require("socket.io")(server,{
   }
 });
 
-io.on("connection",(socket)=>{
-  console.log(socket.id)
+  io.on("connection",(socket)=>{
+
+ 
   if(socket.handshake.query.userId !== "undefined"){
     onlineusers[socket.handshake.query.userId] = socket.id
   }
   
-  io.emit("Onlineusers",Object.keys(onlineusers))
+
+
+
+
+io.emit("Onlineusers",Object.keys(onlineusers))
   console.log(onlineusers)
+  
+socket.on("Typing",(data)=>{
+ io.to(onlineusers[data]).emit("Typing-started","Typing")
+})
 
 
-
-
+socket.on("Typing-stop",(data)=>{
+  io.to(onlineusers[data]).emit("Typing-stopped","Typingstopped")
+ })
 
 
 socket.on("disconnect",()=>{
@@ -55,7 +65,9 @@ socket.on("disconnect",()=>{
   io.emit("Onlineusers",Object.keys(onlineusers))
   console.log(onlineusers)
 })
+
 })
+
 
 app.post("/send_message/:id/:creator",async(req,res)=>{
   try{

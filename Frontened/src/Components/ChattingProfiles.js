@@ -1,8 +1,9 @@
 import React,{useState,useEffect} from 'react'
-import ConversationScreen from './ConversationScreen'
+
 import axios from 'axios';
 import { API } from '../Components/API/API';
-import io from "socket.io-client"
+import io from "socket.io-client";
+import "../index.css"
 function ChattingProfiles() {
 const [conversation,setConversation] = useState(null);
 const [conversationmessages,setConversationmessages] = useState(null);
@@ -11,19 +12,9 @@ const [onlinedUsers,setOnlinedUsers] = useState(null)
 const userdata = localStorage.getItem("user_data")
 const parsed_user_data = JSON.parse(userdata)
 const [message, setMessage] = useState("");
-
-
-  const sendMessage = () => {
-    axios.post(API + `send_message/${receiverId}/${parsed_user_data?.user?._id }`, { message })
-      .then((res) => {
-       
-        setMessage('');
-      })
-      .catch((error) => console.log(error.message));
-  }
- useEffect(()=>{
-axios.get((API+`allmessagesofuser/${parsed_user_data?.user?._id}`)).then((data)=>setConversation(data.data)).catch((error)=>console.log(error.message))
- },[])
+const [socketed,setSocketed] = useState(null)
+const [typing,setTyping] = useState(null)
+  
 useEffect(()=>{
 const socket = io(API, {
     query: {
@@ -36,6 +27,8 @@ socket.on("Onlineusers",(data)=>{
   setOnlinedUsers(data)
   socket.on("newMessage",(data)=>setConversationmessages(data))
 })
+socket.on("Typing-started",(data)=>setTyping(data))
+socket.on("Typing-stopped",(data)=>setTyping(data))
 
 return()=>{socket.close();socket.off("newMessage")}
 },[])
@@ -46,16 +39,36 @@ return()=>{socket.close();socket.off("newMessage")}
   axios.get(API+`allmessages/${parsed_user_data?.user?._id}/${receiver}`).then((data)=>setConversationmessages(data.data)).catch((error)=>console.log(error.message))
   
  }
- const sendit = () => {
-  
-
+ const messageTypinghandler = (e) => {
+  setMessage(e.target.value)
+  socketed.emit("Typing",receiverId)
+  console.log(socketed)
 };
+
+const sendMessage = () => {
+    
+  setTyping((prev)=>!prev)
+ 
+  axios.post(API + `send_message/${receiverId}/${parsed_user_data?.user?._id }`, { message })
+    .then((res) => {
+    socketed.emit("Typing-stop",receiverId)  
+     
+      setMessage('');
+    })
+    .catch((error) => console.log(error.message));
+}
+useEffect(()=>{
+setSocketed(io(API))
+axios.get((API+`allmessagesofuser/${parsed_user_data?.user?._id}`)).then((data)=>setConversation(data.data)).catch((error)=>console.log(error.message))
+},[])
+
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", height: "100vh" }}>
+    <div style={{ display: "flex", justifyContent: "space-between",minHeight:"100vh"}}>
     {/* PROFILES SECTION */}
     <div style={{ backgroundColor: "#6c6f7a", flex: "1", overflowY: "auto" }}>
         <div style={{ display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center" }}>
-            <input type='search' style={{ margin: "10px", padding: "5px 15px" }} />
+            <input type='search' style={{ margin: "10px", padding: "5px 15px",borderRadius:"10px",width:"80%"}} 
+            placeholder='Search users...' />
 
             {conversation?.conversation?.map((data, key) => {
   
@@ -71,11 +84,14 @@ return()=>{socket.close();socket.off("newMessage")}
                 {data.participants
                     ?.filter(participantId => participantId._id !== parsed_user_data?.user?._id )
                     .map(filteredParticipantId => {
-                        // console.log("1233444", filteredParticipantId);
+                       
                         return (
                             <p key={filteredParticipantId} style={{ margin: "0px" }} >
                                <h3 style={{ marginBottom: "0px" }} onClick={(e) => particularChat(e, filteredParticipantId?._id)}> {filteredParticipantId.username}</h3>
-                               {onlinedUsers?.includes?.(filteredParticipantId?._id)?"online":"offline"}
+                               
+                              {console.log((receiverId,conversationmessages))}
+                              {onlinedUsers?.includes?.(filteredParticipantId?._id)?(typing == "Typing"?"typing":"online"):"offline"}
+                             
                             </p>
                         );
                     })}
@@ -88,28 +104,34 @@ return()=>{socket.close();socket.off("newMessage")}
     </div>
 
     {/* CONVERSATION SECTION */}
-    <div style={{  width: "70vw" }}>
+    <div style={{ width: "70vw" }}>
+      {receiverId &&
+    <div className='profile_container' >
+
+    </div>}
+  {receiverId ? 
+    <div className="container">
       
-       <div>
-      <div class="container">
-        <ul class="message-list">
-          {conversationmessages?.conversation?.participants?.includes(receiverId) &&conversationmessages?.conversation?.messages?.map((data) =>{ 
-           
-            return (
+      <ul className="message-list">
+        {conversationmessages?.conversation?.participants?.includes(receiverId) && conversationmessages?.conversation?.messages?.map((data) => { 
+          return (
             <li className={data?.creater === parsed_user_data?.user?._id ? "message sent" : "message received"}>{data.message}</li>
-            )
-            })}
-        </ul>
-        <div class="input-container">
-          <input type="text" class="input-field" placeholder="Type your message..." value={message} onChange={(e) => setMessage(e.target.value)} />
-          <button class="send-button" onClick={sendMessage}>Send</button>
-         
-        </div>
+          );
+        })}
+      </ul>
+      <div className="input-container">
+        <input type="text" className="input-field" placeholder="Type your message..." value={message} onChange={messageTypinghandler} />
+        <button className="send-button" onClick={sendMessage}>Send</button>
       </div>
     </div>
+    : (
+      <div style={{ display: "flex", justifyContent: "center", flex: "1",marginTop:"10%"}} className="card">
+        <h4 style={{ textAlign: "center",lineHeight:"50px"}}>Hi, <span style={{color:"grey",fontSize:"20px"}}>{parsed_user_data?.user?.username}</span><br /> Welcome To Messenger application</h4>
+      </div>
+    )
+  }
+</div>
 
-
-    </div>
    
 </div>
 
