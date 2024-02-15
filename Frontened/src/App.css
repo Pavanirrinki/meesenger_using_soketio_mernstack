@@ -27,14 +27,17 @@
 
 .message.sent {
     background-color: #dcf8c6;
-   width: 100%;
+   width: 10vw;
    margin-bottom: 20px;
+   word-break: break-all;
 }
 
 .message.received {
     background-color: #ffffff;
    margin-left: 80%;
     background-color: aqua;
+    width:10vw;
+    word-break: break-all;
 }
 
 .input-container {

@@ -1,5 +1,5 @@
 import React,{useState,useEffect} from 'react'
-
+import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { API } from '../Components/API/API';
 import io from "socket.io-client";
@@ -14,7 +14,7 @@ const parsed_user_data = JSON.parse(userdata)
 const [message, setMessage] = useState("");
 const [socketed,setSocketed] = useState(null)
 const [typing,setTyping] = useState(null)
-  
+ const navigate = useNavigate()
 useEffect(()=>{
 const socket = io(API, {
     query: {
@@ -61,53 +61,59 @@ useEffect(()=>{
 setSocketed(io(API))
 axios.get((API+`allmessagesofuser/${parsed_user_data?.user?._id}`)).then((data)=>setConversation(data.data)).catch((error)=>console.log(error.message))
 },[])
-
+const handleLogout = () => {
+  localStorage.removeItem("user_data");
+  navigate("/");
+};
   return (
     <div style={{ display: "flex", justifyContent: "space-between",minHeight:"100vh"}}>
+      
     {/* PROFILES SECTION */}
     <div style={{ backgroundColor: "#6c6f7a", flex: "1", overflowY: "auto" }}>
-        <div style={{ display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center" }}>
-            <input type='search' style={{ margin: "10px", padding: "5px 15px",borderRadius:"10px",width:"80%"}} 
-            placeholder='Search users...' />
+            <div style={{ display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center" }}>
+                <div style={{ display: "flex", justifyContent: "space-around" }}>
+                    <input type='search' style={{ margin: "10px", padding: "5px 15px", borderRadius: "10px", width: "80%" }} placeholder='Search users...' />
+                    <button style={{ padding: "0px 20px", height: "30px", margin: "auto", backgroundColor: "#ff6666", border: "none", borderRadius: "10px", fontWeight: "bold", fontSize: "15px", color: "whitesmoke" }} onClick={handleLogout}>Logout</button>
+                </div>
 
-            {conversation?.conversation?.map((data, key) => {
-  
-    return (
-        <div key={key} style={{ display: "flex", marginBottom: "10px" }}>
-            <img
-                src="https://media.istockphoto.com/id/1495088043/vector/user-profile-icon-avatar-or-person-icon-profile-picture-portrait-symbol-default-portrait.jpg?s=1024x1024&w=is&k=20&c=oGqYHhfkz_ifeE6-dID6aM7bLz38C6vQTy1YcbgZfx8="
-                alt="yy"
-                style={{ height: "80px", width: "80px", borderRadius: "50%", marginRight: "10px" }}
-            />
-            <div>
-              
-                {data.participants
-                    ?.filter(participantId => participantId._id !== parsed_user_data?.user?._id )
-                    .map(filteredParticipantId => {
+                {conversation?.conversation?.map((data, key) => (
+                    <div key={key} style={{ display: "flex", alignItems: "center", width: "30vw",margin:"0px 0px 10px 0px"}}>
+                        <img
+                            src="https://media.istockphoto.com/id/1495088043/vector/user-profile-icon-avatar-or-person-icon-profile-picture-portrait-symbol-default-portrait.jpg?s=1024x1024&w=is&k=20&c=oGqYHhfkz_ifeE6-dID6aM7bLz38C6vQTy1YcbgZfx8="
+                            alt="yy"
+                            style={{ height: "80px", width: "80px", borderRadius: "50%", marginRight: "10px" }}
+                        />
+                          {data.participants
+                            ?.filter(participantId => participantId._id !== parsed_user_data?.user?._id)
+                            .map(filteredParticipantId => (
+                        <>
+                        <div style={{ display: "flex", flexDirection: "column"}}>
+
+                                <h3 style={{ marginBottom: "0px" }} onClick={(e) => particularChat(e, filteredParticipantId?._id)}> {filteredParticipantId.username}</h3>
+                                {onlinedUsers?.includes?.(filteredParticipantId?._id) && (typing == "Typing") ? "typing" : "bio"}
+                              </div><span>
+                              {onlinedUsers?.includes?.(filteredParticipantId?._id) &&
+                              <div style={{ height: "10px", width: "10px", backgroundColor: "#006600", borderRadius: "50%",marginLeft:"10vw" }}></div>}</span>
+                              </>
                        
-                        return (
-                            <p key={filteredParticipantId} style={{ margin: "0px" }} >
-                               <h3 style={{ marginBottom: "0px" }} onClick={(e) => particularChat(e, filteredParticipantId?._id)}> {filteredParticipantId.username}</h3>
-                               
-                              {console.log((receiverId,conversationmessages))}
-                              {onlinedUsers?.includes?.(filteredParticipantId?._id)?(typing == "Typing"?"typing":"online"):"offline"}
-                             
-                            </p>
-                        );
-                    })}
+                          ))}
+                    </div>
+                ))}
             </div>
         </div>
-    );
-})}
-
-        </div>
-    </div>
 
     {/* CONVERSATION SECTION */}
     <div style={{ width: "70vw" }}>
       {receiverId &&
-    <div className='profile_container' >
-
+    <div className='profile_container'>
+      <div style={{display:"flex",flexDirection:"column",margin:"10px"}}>
+ <img
+                src="https://media.istockphoto.com/id/1495088043/vector/user-profile-icon-avatar-or-person-icon-profile-picture-portrait-symbol-default-portrait.jpg?s=1024x1024&w=is&k=20&c=oGqYHhfkz_ifeE6-dID6aM7bLz38C6vQTy1YcbgZfx8="
+                alt="yy"
+                style={{ height: "70px", width: "70px", borderRadius: "50%"}}
+            />
+            <p style={{marginTop:"0px",marginLeft:"10px"}}>{onlinedUsers?.includes?.(receiverId)?((typing == "Typing")?"typing":"online"):"last seen 7days ago"}</p>
+            </div>
     </div>}
   {receiverId ? 
     <div className="container">

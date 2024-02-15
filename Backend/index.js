@@ -6,6 +6,7 @@ const Conversation = require("./Models/AllMessagesmodel.js")
 const mongoose = require("mongoose")
 const userRoute = require("./Routes/UserRoute.js")
 const messengerRoute = require("./Routes/MessageRoute.js")
+const userschema = require("./Models/Usermodel.js")
 require('dotenv').config()
 const port = process.env.PORT || 8000
 app.use(express.json())
@@ -110,4 +111,17 @@ return  res.status(201).json({newMessage,conversation});
 }
 })
 
+app.get('/search/:keyword',async(req,res)=>{
+  const {keyword} = req.params;
+  try{
+    const userslist = await userschema.findOne({
+      $or: [
+        { username: { $regex: keyword, $options: 'i' } },
+      ],
+    });
+    return res.status(200).json({userslist})
+  }catch(error){
+    return res.status(500).json({error:error.message})
+  }
+})
 
